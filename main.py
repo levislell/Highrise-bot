@@ -1,6 +1,9 @@
 import os
 import asyncio
 import random
+import subprocess
+import sys
+import time
 from threading import Thread
 from flask import Flask
 from highrise import BaseBot, User, Position
@@ -273,16 +276,21 @@ class Bot(BaseBot):
             await self.highrise.chat(f"{random.choice(GREETING_RESPONSES)} @{user.username}")
 
 # ==========================
-# EXECUTION (CORRECTED SDK FUNCTION)
+# EXECUTION (UNIVERSAL SUBPROCESS METHOD)
 # ==========================
 def start_bot():
     room_id = os.environ.get("ROOM_ID", "65e361f8aef42a7b0ed22029")
     api_token = os.environ.get("API_TOKEN", "f1f9d1cae9063a6a0a50ccfc95d0864005990c820d5f7dcf3463a6a11ecd3cfa")
 
-    # Utilisation directe du module run_bot natif
-    from highrise.__main__ import run_bot
-    run_bot("main:Bot", room_id, api_token)
+    # Déclenche l'instance du bot de manière isolée via la commande système officielle
+    subprocess.Popen([sys.executable, "-m", "highrise", "main:Bot", room_id, api_token])
 
 if __name__ == "__main__":
+    # Démarre le serveur web Flask
     Thread(target=run_web_server).start()
+    # Démarre le bot Highrise
     start_bot()
+    
+    # Maintient l'application mère éveillée
+    while True:
+        time.sleep(1)
