@@ -22,6 +22,9 @@ def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
+# Démarrage automatique du serveur web pour Render
+Thread(target=run_web_server).start()
+
 # ==========================
 # CONFIG
 # ==========================
@@ -54,7 +57,7 @@ RIDDLES = [
 ]
 
 # ==========================
-# EMOTES DICTIONARY
+# EMOTES DICTIONARY (53 Emotes)
 # ==========================
 EMOTES = {
     "dance": "idle-dance-casual", "wave": "idle-wave", "freshprince": "dance-freshprince",
@@ -72,7 +75,8 @@ EMOTES = {
     "martial": "dance-martial-artist", "hero": "emote-hero", "tiktok2": "dance-tiktok2",
     "popularvibe": "dance-popularvibe", "headball": "emote-headball", "trueheart": "dance-true-heart",
     "cursing": "emoji-cursing", "mine": "dance-mine", "robotic": "dance-robotic",
-    "graceful": "emote-graceful", "meditate": "emote-meditate-idle", "repos": "sit-idle-cute"
+    "graceful": "emote-graceful", "meditate": "emote-meditate-idle", "repos": "sit-idle-cute",
+    "kpop": "emote-kpop-dance1", "photo": "emote-collab-photo-left"
 }
 EMOTES_LISTE = list(EMOTES.values())
 # ==========================
@@ -81,62 +85,139 @@ EMOTES_LISTE = list(EMOTES.values())
 class Bot(BaseBot):
     emote_tasks = {}
     current_riddle = None
+    
+    # Variables pour la fonction Follow (Suivi)
+    following_user_id = None
+    follow_task = None
 
     async def start_loop(self, user_id: str, emote_name: str):
         if user_id in self.emote_tasks:
             self.emote_tasks[user_id].cancel()
         async def loop_emote():
             while True:
-                try: await self.highrise.send_emote(emote_name, user_id)
-                except: pass
+                try: 
+                    await self.highrise.send_emote(emote_name, user_id)
+                except: 
+                    pass
                 await asyncio.sleep(5)
         self.emote_tasks[user_id] = asyncio.create_task(loop_emote())
 
     async def bot_life_loop(self):
         while True:
-            try:
-                random_x = round(random.uniform(1.0, 15.0), 2)
-                random_z = round(random.uniform(1.0, 15.0), 2)
-                target_position = Position(x=random_x, y=0.0, z=random_z, facing="FrontRight")
-                await self.highrise.walk_to(target_position)
-                await asyncio.sleep(3)
-                await self.highrise.send_emote(random.choice(EMOTES_LISTE))
-            except Exception as e:
-                print(f"Movement error: {e}")
+            # Ne bouge pas de manière aléatoire si le bot est en train de suivre quelqu'un
+            if self.following_user_id is None:
+                try:
+                    random_x = round(random.uniform(1.0, 15.0), 2)
+                    random_z = round(random.uniform(1.0, 15.0), 2)
+                    target_position = Position(x=random_x, y=0.0, z=random_z, facing="FrontRight")
+                    await self.highrise.walk_to(target_position)
+                    await asyncio.sleep(3)
+                    await self.highrise.send_emote(random.choice(EMOTES_LISTE))
+                except Exception as e:
+                    print(f"Movement error: {e}")
             await asyncio.sleep(15)
+
+    async def follow_loop(self):
+        """Boucle permettant au bot de suivre les déplacements d'un joueur en temps réel"""
+        while self.following_user_id:
+            try:
+                room_users = await self.highrise.get_room_users()
+                for user, position in room_users.content:
+                    if user.id == self.following_user_id:
+                        if isinstance(position, Position):
+                            # On calcule une position juste à côté du joueur ciblé
+                            target_pos = Position(x=position.x + 0.5, y=position.y, z=position.z, facing="FrontLeft")
+                            await self.highrise.walk_to(target_pos)
+                        break
+            except Exception as e:
+                print(f"Follow error: {e}")
+            await asyncio.sleep(2.5)
 
     async def on_start(self, session_metadata: SessionMetadata):
         print("🤖 Bot connected successfully!")
+        try:
+            # Modification automatique du profil avec la mention de votre pseudo créateur
+            await self.highrise.change_profile(bio="Bot créateur @gentleman_0")
+            print("📝 Bio mise à jour avec succès !")
+        except Exception as e:
+            print(f"Erreur mise à jour bio: {e}")
+            
         await self.highrise.chat("✅ <#AAFFAA>Leviae Ultimate is online! Type <#FFD700>!help<#AAFFAA>.")
         asyncio.create_task(self.bot_life_loop())
 
     async def on_user_join(self, user: User, position: Position):
         await self.highrise.chat(f"👋 Welcome mon copain <#00BFFF>{user.username}<#FFFFFF>! Type <#FFD700>!help")
 
+    async def on_user_leave(self, user: User):
+        # Si la personne suivie quitte le salon, le bot arrête le suivi automatiquement
+        if user.id == self.following_user_id:
+            self.following_user_id = None
+            if self.follow_task:
+                self.follow_task.cancel()
+            await self.highrise.chat("🚶 La personne suivie a quitté le salon. Arrêt du suivi.")
+
     async def on_tip(self, sender: User, receiver: User, tip: int):
         if receiver.username.lower() == BOT_USERNAME.lower():
             await self.highrise.chat(f"💎 Thank you <#FFD700>{sender.username}<#FFFFFF> for the tip of <#FF79C6>{tip} gold<#FFFFFF>!")
             await self.start_loop(sender.id, "idle-dance-casual")
-
     async def on_chat(self, user: User, message: str):
         text = message.lower().strip()
         parts = message.split()
 
+        # Réponses aux énigmes actives
         if self.current_riddle and text == self.current_riddle["answer"]:
             await self.highrise.chat(f"🎉 <#AAFFAA>Correct! @{user.username} found the answer: <#FFFFFF>{self.current_riddle['answer'].upper()}!")
             self.current_riddle = None
             return
 
+        # Déclenchement d'émote par numéro (sans préfixe)
         if text.isdigit():
             index = int(text) - 1
             if 0 <= index < len(EMOTES_LISTE):
                 await self.start_loop(user.id, EMOTES_LISTE[index])
                 return
 
-        if text in EMOTES:
-            await self.start_loop(user.id, EMOTES[text])
+        # Déclenchement d'émote par son nom (avec point d'exclamation, ex: !photo)
+        if text.startswith("!"):
+            emote_name = text[1:]  # Enlève le "!" pour lire le nom
+            if emote_name in EMOTES:
+                await self.start_loop(user.id, EMOTES[emote_name])
+                return
+
+        # Gestion du système de suivi (Follow / Unfollow) [MODÉRATEURS & OWNERS]
+        if text.startswith("!follow"):
+            if user.id in MODERATORS or user.id in OWNERS:
+                if len(parts) > 1:
+                    target = parts[1].replace("@", "").lower()
+                    
+                    if target == "stop":
+                        self.following_user_id = None
+                        if self.follow_task:
+                            self.follow_task.cancel()
+                        await self.highrise.chat("⛔ Arrêt du suivi.")
+                        return
+                        
+                    # Recherche de l'utilisateur ciblé dans le salon
+                    room_users = await self.highrise.get_room_users()
+                    found_user = None
+                    for u, pos in room_users.content:
+                        if u.username.lower() == target:
+                            found_user = u
+                            break
+                    
+                    if found_user:
+                        self.following_user_id = found_user.id
+                        if self.follow_task:
+                            self.follow_task.cancel()
+                        self.follow_task = asyncio.create_task(self.follow_loop())
+                        await self.highrise.chat(f"🚶 Je commence à suivre @{found_user.username} !")
+                    else:
+                        await self.highrise.chat("❌ Cet utilisateur n'est pas dans la pièce.")
+                else:
+                    await self.highrise.chat("💡 Usage: !follow [username] ou !follow stop")
             return
 
+        # Arrêt des boucles de danse
         if text == "stop":
             if user.id in self.emote_tasks:
                 self.emote_tasks[user.id].cancel()
@@ -146,11 +227,12 @@ class Bot(BaseBot):
                 await self.highrise.chat("❌ You don't have any active loops.")
             return
 
+        # Commandes d'aide textuelles
         if text == "!help":
             menu = (
                 "<#FFD700>━━━ Ultimate Help Menu ━━━\n"
                 "<#FF79C6>🎮 !help fun <#FFFFFF>: Games & Fun\n"
-                "<#9370DB>🎵 !emotes <#FFFFFF>: Show all 51 emotes\n"
+                "<#9370DB>🎵 !emotes <#FFFFFF>: Show all 53 emotes\n"
                 "<#00BFFF>📢 !help room <#FFFFFF>: Room info & Utils\n"
                 "<#FF4500>🛡️ !help mod <#FFFFFF>: Moderator actions"
             )
@@ -183,114 +265,69 @@ class Bot(BaseBot):
                 "• <#FFFFFF>!kick [username]\n"
                 "• !ban [username]\n"
                 "• !mute [username] [minutes]\n"
-                "• !clearchat\n"
-                "• !say [text] <#AFAFAF>(Make bot speak)\n"
-                "• !wallet <#AFAFAF>(Check bot gold balance)\n"
-                "• !bio [text] <#AFAFAF>(Change bot profile bio)"
+                "• !follow [username] <#AFAFAF>(Suivre quelqu'un)\n"
+                "• !follow stop <#AFAFAF>(Arrêter le suivi)\n"
+                "• !say [text]\n"
+                "• !wallet\n"
+                "• !bio [text]"
             )
             await self.highrise.chat(menu_mod)
             return
 
+        # Commande Jeu de l'énigme
         elif text == "!riddle":
             if self.current_riddle:
-                await self.highrise.chat(f"🧠 Active riddle: <#FF79C6>{self.current_riddle['question']}")
+                await self.highrise.chat(f"🧠 Active riddle is already running! Question: {self.current_riddle['question']}")
             else:
                 self.current_riddle = random.choice(RIDDLES)
-                await self.highrise.chat(f"🧠 <#FFD700>Riddle: <#FFFFFF>{self.current_riddle['question']}")
+                await self.highrise.chat(f"🧠 [RIDDLE]: {self.current_riddle['question']} 🤔")
+            return
 
+        # Commande Pile ou Face
         elif text == "!coinflip":
-            result = random.choice(["Heads 🪙", "Tails 🪙"])
-            await self.highrise.chat(f"🎰 @{user.username} flipped a coin and got: <#FFD700>{result}")
+            result = random.choice(["HEADS 🪙", "TAILS 🪙"])
+            await self.highrise.chat(f"🪙 {user.username} flipped a coin and got: <#FFD700>{result}<#FFFFFF>!")
+            return
 
+        # Commande Taux d'amour
         elif text.startswith("!love"):
-            if len(parts) < 2:
-                await self.highrise.chat("❌ Usage: !love [username]")
-            else:
-                target = parts[1].replace("@", "")
+            if len(parts) > 1:
+                target = parts[1]
                 percent = random.randint(0, 100)
-                heart = "❤️" if percent > 50 else "💔"
-                await self.highrise.chat(f"💞 Compatibility between @{user.username} & @{target}: <#FF79C6>{percent}% {heart}")
+                await self.highrise.chat(f"❤️ Love Test between {user.username} & {target}: <#FF79C6>{percent}%<#FFFFFF>!")
+            else:
+                await self.highrise.chat("❤️ Usage: !love [username]")
+            return
 
+        # Commande Liste des émoticones
         elif text == "!emotes":
-            liste_numerotee = [f"{i}.{nom}" for i, nom in enumerate(EMOTES.keys(), start=1)]
-            await self.highrise.chat(f"💃 <#9370DB>Emotes: <#FFFFFF>{', '.join(liste_numerotee)}")
+            await self.highrise.chat("🎵 Ajoutez un '!' devant le nom de l'émote pour danser ! Exemples: !photo, !kpop, !twerk ou tapez son numéro.")
+            return
 
-        elif text == "!id":
-            await self.highrise.chat(f"👤 Your Highrise ID: <#00BFFF>{user.id}")
+        # Commande de Modération : Faire parler le bot
+        elif text.startswith("!say "):
+            if user.id in MODERATORS or user.id in OWNERS:
+                say_text = message[5:]
+                await self.highrise.chat(say_text)
+            return
 
-        elif text == "!players":
-            room_users = await self.highrise.get_room_users()
-            await self.highrise.chat(f"📢 Active players in this room: <#AAFFAA>{len(room_users)}")
+        # Commande de Modération : Changer la bio à la volée
+        elif text.startswith("!bio "):
+            if user.id in OWNERS:
+                new_bio = message[5:]
+                try:
+                    await self.highrise.change_profile(bio=new_bio)
+                    await self.highrise.chat("✅ Bio updated via command!")
+                except Exception as e:
+                    await self.highrise.chat(f"❌ Error updating bio: {e}")
+            return
 
-        elif text.startswith("!say") or text.startswith("!kick") or text.startswith("!ban") or text.startswith("!mute") or text == "!clearchat" or text == "!wallet" or text.startswith("!bio"):
-            if user.id not in OWNERS and user.id not in MODERATORS:
-                await self.highrise.chat("❌ Permission denied.")
-                return
-
-            if text.startswith("!say"):
-                content = message[4:].strip()
-                if content: await self.highrise.chat(content)
-
-            elif text == "!clearchat":
-                for _ in range(10): await self.highrise.chat(" ")
-                await self.highrise.chat("🧹 <#AAFFAA>Chat cleared by staff.")
-
-            elif text == "!wallet":
-                wallet = await self.highrise.get_wallet()
-                gold = wallet.content.amount if wallet.content else 0
-                await self.highrise.chat(f"💰 Bot Wallet Balance: <#FFD700>{gold} Gold")
-
-            elif text.startswith("!bio"):
-                new_bio = message[4:].strip()
-                if new_bio:
-                    try:
-                        await self.highrise.change_user_bio(new_bio)
-                        await self.highrise.chat("📝 Bot bio updated successfully!")
-                    except Exception as e: await self.highrise.chat(f"❌ Error: {str(e)}")
-
-            elif text.startswith("!kick") or text.startswith("!ban") or text.startswith("!mute"):
-                if len(parts) < 2:
-                    await self.highrise.chat("❌ Missing username. Example: !kick @username")
-                    return
-                
-                target_user = parts[1].replace("@", "")
-                users = await self.highrise.get_room_users()
-                
-                for u, pos in users:
-                    if u.username.lower() == target_user.lower():
-                        if text.startswith("!kick"):
-                            await self.highrise.kick_user(u.id)
-                            await self.highrise.chat(f"🚪 {u.username} has been kicked out.")
-                        elif text.startswith("!ban"):
-                            await self.highrise.ban_user(u.id, action="ban")
-                            await self.highrise.chat(f"🔨 {u.username} has been permanently banned.")
-                        elif text.startswith("!mute"):
-                            minutes = int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else 5
-                            await self.highrise.mute_user(u.id, minutes * 60)
-                            await self.highrise.chat(f"🤫 {u.username} has been muted for {minutes} minutes.")
-                        break
-
-        elif "bot" in text or "leviae" in text:
-            await self.highrise.chat(random.choice(CHATBOT_RESPONSES))
-        elif any(word in text for word in ["hello", "hi", "hey"]):
-            await self.highrise.chat(f"{random.choice(GREETING_RESPONSES)} @{user.username}")
-
-# ==========================
-# EXECUTION (UNIVERSAL SUBPROCESS METHOD)
-# ==========================
-def start_bot():
-    room_id = os.environ.get("ROOM_ID", "65e361f8aef42a7b0ed22029")
-    api_token = os.environ.get("API_TOKEN", "f1f9d1cae9063a6a0a50ccfc95d0864005990c820d5f7dcf3463a6a11ecd3cfa")
-
-    # Déclenche l'instance du bot de manière isolée via la commande système officielle
-    subprocess.Popen([sys.executable, "-m", "highrise", "main:Bot", room_id, api_token])
-
-if __name__ == "__main__":
-    # Démarre le serveur web Flask
-    Thread(target=run_web_server).start()
-    # Démarre le bot Highrise
-    start_bot()
-    
-    # Maintient l'application mère éveillée
-    while True:
-        time.sleep(1)
+        # Commande de Modération : Consulter le portefeuille
+        elif text == "!wallet":
+            if user.id in OWNERS:
+                try:
+                    wallet = await self.highrise.get_wallet()
+                    await self.highrise.chat(f"💰 Bot Wallet Balance: {wallet.content.amount} gold.")
+                except Exception as e:
+                    await self.highrise.chat(f"❌ Error fetching wallet: {e}")
+            return
