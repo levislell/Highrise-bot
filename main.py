@@ -1,4 +1,4 @@
-import os, asyncio, random, sys, time
+import os, asyncio, random
 from threading import Thread
 from flask import Flask
 from highrise import BaseBot, User, Position
@@ -26,24 +26,9 @@ MODERATORS = ["65592020383c55ed5c45aabd"]
 VIP_LIST = [] 
 CHAT_LOCKED = False 
 INSULTES_LISTE = ["fdp", "con", "salope"]
-USER_SPAM_TRACKER = {}
-# ==========================
-# 3. PHRASES ET JEUX AUTOMATIQUES (Textes en anglais)
-# ==========================
-CHATBOT_RESPONSES = [
-    "Need help? Type <#FFD700>!help<#FFFFFF> ! 🤖",
-    "Hope you are having a wonderful time! ✨",
-    "Yes? I am Leviae, the official bot! 🎵",
-    "What's up? Send the exact name of an emote to loop it! 💃"
-]
 GREETING_RESPONSES = ["Hello! 👋", "Hi there! 🎉", "Welcome! 🌟"]
-RIDDLES = [
-    {"question": "What has hands but cannot clap?", "answer": "clock"},
-    {"question": "What has to be broken before you can use it?", "answer": "egg"},
-    {"question": "I’m tall when I’m young, and I’m short when I’m old. What am I?", "answer": "candle"}
-]
 # ==========================
-# 4. LISTE DES ÉMOTES
+# 3. LISTE DES EMOTES
 # ==========================
 EMOTES = {
     "swagbounce": "dance-swagbounce", "duckwalk": "dance-duckwalk", "pennywise": "dance-pennywise",
@@ -94,29 +79,11 @@ EMOTES = {
 }
 EMOTES_LISTE = list(EMOTES.values())
 # ==========================
-# 5. ENTRÉE DE LA CLASSE DU BOT (Logique et Commandes)
+# 4. ESSENTIEL DE LA CLASSE DU BOT
 # ==========================
 class Bot(BaseBot):
-    emote_tasks, current_riddle, following_user_id, follow_task = {}, None, None, None
+    following_user_id, follow_task = None, None
     bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
-
-    async def start_loop(self, uid, name):
-        if uid in self.emote_tasks:
-            self.emote_tasks[uid].cancel()
-            try:
-                await self.emote_tasks[uid]
-            except asyncio.CancelledError:
-                pass
-
-        async def loop():
-            while True:
-                try: 
-                    await self.highrise.send_emote(name, uid)
-                except Exception as e: 
-                    print(f"Emote loop error: {e}")
-                await asyncio.sleep(5)
-                
-        self.emote_tasks[uid] = asyncio.create_task(loop())
 
     async def bot_life_loop(self):
         while True:
@@ -126,8 +93,7 @@ class Bot(BaseBot):
                     await self.highrise.walk_to(self.bot_position)
                     await asyncio.sleep(3)
                     await self.highrise.send_emote(random.choice(EMOTES_LISTE))
-                except Exception as e:
-                    print(f"Bot life error: {e}")
+                except: pass
             await asyncio.sleep(15)
 
     async def follow_loop(self):
@@ -138,18 +104,14 @@ class Bot(BaseBot):
                     if u.id == self.following_user_id and isinstance(pos, Position):
                         self.bot_position = Position(x=pos.x + 0.5, y=pos.y, z=pos.z, facing="FrontLeft")
                         await self.highrise.walk_to(self.bot_position)
-            except Exception as e:
-                print(f"Follow loop error: {e}")
+            except: pass
             await asyncio.sleep(2.5)
 
     async def on_start(self, session_metadata: SessionMetadata):
         try: 
-            # Configuration exacte de votre biographie personnelle
+            # Mise à jour officielle de la bio demandée
             await self.highrise.set_bio("Créé par @gentleman_0")
-            print("Bio mise à jour avec succès : Créé par @gentleman_0")
-        except Exception as e: 
-            print(f"Failed to update bio: {e}")
-            
+        except: pass
         await self.highrise.chat("✅ <#AAFFAA>Leviae Ultimate is online! Type !help.")
         asyncio.create_task(self.bot_life_loop())
         self.follow_task = asyncio.create_task(self.follow_loop())
@@ -163,9 +125,6 @@ class Bot(BaseBot):
     async def on_user_leave(self, user: User):
         if user.id == self.following_user_id:
             self.following_user_id = None
-        if user.id in self.emote_tasks:
-            self.emote_tasks[user.id].cancel()
-            del self.emote_tasks[user.id]
 
     async def on_chat(self, user: User, message: str) -> None:
         global CHAT_LOCKED
@@ -173,43 +132,26 @@ class Bot(BaseBot):
 
         for insulte in INSULTES_LISTE:
             if insulte in nettoye:
-                try:
-                    await self.highrise.chat(f"⚠️ Keep the chat clean @{user.username}!")
+                try: await self.highrise.chat(f"⚠️ Keep the chat clean @{user.username}!")
                 except: pass
                 return
 
         if CHAT_LOCKED and user.id not in OWNERS and user.id not in MODERATORS:
             return
 
-        if nettoye == "!stop":
-            if user.id in self.emote_tasks:
-                self.emote_tasks[user.id].cancel()
-                del self.emote_tasks[user.id]
-                await self.highrise.chat(f"@{user.username}, emote loop stopped.")
-            return
-
+        # Déclenchement direct de l'émote (remplace l'ancienne immédiatement)
         if nettoye in EMOTES:
-            await self.start_loop(user.id, EMOTES[nettoye])
+            try: await self.highrise.send_emote(EMOTES[nettoye], user.id)
+            except: pass
             return
 
+        # Menu d'aide structuré affichant explicitement les 4 catégories
         if nettoye == "!help":
-            await self.highrise.chat("🤖 [Leviae Help] Commands: Send any emote name to loop it. Use !stop to end. Other: !riddle, !chat, !follow, !unstuck")
+            await self.highrise.chat("🤖 [Leviae Help] 🌟 Cat 1 (Emotes): Type any emote name | 🏃 Cat 2 (Move): !follow, !unstuck")
             if user.id in OWNERS or user.id in MODERATORS:
-                await self.highrise.chat("🛡️ Admin Commands: !lock, !unlock, !come")
-            return
-
-        if nettoye == "!chat":
-            await self.highrise.chat(random.choice(CHATBOT_RESPONSES))
-            return
-
-        if nettoye == "!riddle":
-            self.current_riddle = random.choice(RIDDLES)
-            await self.highrise.chat(f"❓ [Riddle] {self.current_riddle['question']}")
-            return
-
-        if self.current_riddle and nettoye == self.current_riddle['answer']:
-            await self.highrise.chat(f"🎉 Well done @{user.username}! The correct answer was indeed: {self.current_riddle['answer']}")
-            self.current_riddle = None
+                await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
+            else:
+                await self.highrise.chat("💬 Cat 3 (General): !help | 🔒 Cat 4 (Admin): Locked for players")
             return
 
         if nettoye == "!follow":
@@ -234,8 +176,7 @@ class Bot(BaseBot):
                             self.bot_position = Position(x=pos.x, y=pos.y, z=pos.z, facing="FrontRight")
                             await self.highrise.walk_to(self.bot_position)
                             await self.highrise.chat("Coming over right now!")
-                except Exception as e:
-                    print(f"Error on !come: {e}")
+                except: pass
                 return
 
             if nettoye == "!lock":
