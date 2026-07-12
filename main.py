@@ -273,21 +273,15 @@ class Bot(BaseBot):
             await self.highrise.chat(f"{random.choice(GREETING_RESPONSES)} @{user.username}")
 
 # ==========================
-# EXECUTION
+# EXECUTION (CORRECTED SDK FUNCTION)
 # ==========================
 def start_bot():
     room_id = os.environ.get("ROOM_ID", "65e361f8aef42a7b0ed22029")
     api_token = os.environ.get("API_TOKEN", "f1f9d1cae9063a6a0a50ccfc95d0864005990c820d5f7dcf3463a6a11ecd3cfa")
 
-    from highrise.__main__ import ARGS
-    from highrise.network import BotLoop
-
-    ARGS.bot_path = "main:Bot"
-    ARGS.room_id = room_id
-    ARGS.api_token = api_token
-
-    bot_loop = BotLoop()
-    bot_loop.run()
+    # Utilisation directe du module run_bot natif
+    from highrise.__main__ import run_bot
+    run_bot("main:Bot", room_id, api_token)
 
 if __name__ == "__main__":
     Thread(target=run_web_server).start()
