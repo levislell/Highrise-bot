@@ -3,10 +3,8 @@ from threading import Thread
 from flask import Flask
 from highrise import BaseBot, User, Position
 from highrise.models import SessionMetadata
+from emotes import EMOTES
 
-# ==========================
-# 1. SERVEUR WEB (Pour Render Free 24h/24)
-# ==========================
 app = Flask('')
 
 @app.route('/')
@@ -17,9 +15,7 @@ def run_web_server():
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 
 Thread(target=run_web_server).start()
-# ==========================
-# 2. CONFIGURATION GENERALE
-# ==========================
+
 BOT_USERNAME = "leviae"
 OWNERS = ["65592020383c55ed5c45aabd"]
 MODERATORS = ["65592020383c55ed5c45aabd"]
@@ -27,74 +23,31 @@ VIP_LIST = []
 CHAT_LOCKED = False 
 INSULTES_LISTE = ["fdp", "con", "salope"]
 GREETING_RESPONSES = ["Hello! 👋", "Hi there! 🎉", "Welcome! 🌟"]
-# ==========================
-# 3. LISTE DES EMOTES
-# ==========================
-EMOTES = {
-    "swagbounce": "dance-swagbounce", "duckwalk": "dance-duckwalk", "pennywise": "dance-pennywise",
-    "floorsleeping": "idle-floorsleeping", "laidback": "sit-idle-laidBack",
-    "ghost": "emote-ghost-idle", "annoyed": "idle-loop-annoyed", "touch": "dance-touch",
-    "jinglebell": "dance-jinglebell", "space": "idle-space", "metal": "dance-metal",
-    "flex": "emoji-flex", "orangejustice": "dance-orangejustice", "shy": "emote-shy2",
-    "blowkiss": "emote-blowkisses", "stargazer": "emote-stargazer", "knock": "emote-knocking-screen",
-    "curtsy": "emote-curtsy", "slap": "emote-slap", "singing": "idle_singing",
-    "swinging": "idle-dance-swinging", "kawai": "dance-kawai", "pose9": "emote-pose9",
-    "tiktok9": "dance-tiktok9", "floss": "dance-floss", "breakdance": "dance-breakdance",
-    "wild": "dance-wild", "hipshake": "dance-hipshake", "griddy": "dance-griddy",
-    "shrink": "emote-shrink", "spiritual": "dance-spiritual",
-    "martial": "dance-martial-artist", "hero": "emote-hero", "tiktok2": "dance-tiktok2",
-    "popularvibe": "dance-popularvibe", "headball": "emote-headball", "trueheart": "dance-true-heart",
-    "mine": "dance-mine", "robotic": "dance-robotic",
-    "graceful": "emote-graceful", "meditate": "emote-meditate-idle", "frollicking": "emote-frollicking",
-    "ballet": "dance-ballet", "woah": "dance-woah", "shuffle": "dance-shuffle",
-    "frog": "emote-frog", "lying": "emoji-lying", "laughing2": "emote-laughing2",
-    "boxer": "emote-boxer", "tiktok10": "dance-tiktok10", "attention": "emote-attention",
-    "dab": "emote-dab", "timejump": "emote-timejump", "puppet": "emote-puppet",
-    "aerobics": "dance-aerobics", "guitar": "idle-guitar",
-    "tiktok7": "idle-dance-tiktok7", "tiktok11": "dance-tiktok11", "tapdance": "idle-loop-tapdance",
-    "pose10": "emote-pose10", "scared": "emoji-scared", "arrogance": "emoji-arrogance",
-    "wrong": "dance-wrong", "halo": "emoji-halo", "anime": "dance-anime",
-    "hyped": "emote-hyped", "boo": "emote-boo", "trampoline": "emote-trampoline",
-    "emojighost": "emoji-ghost", "float": "emote-float", "sleigh": "emote-sleigh",
-    "cheerleader": "dance-cheerleader", "ninjarun": "emote-ninjarun", "gangnam": "emote-gangnam",
-    "snake": "emote-snake", "pinguin": "dance-pinguin", "loopaerobics": "idle-loop-aerics",
-    "howl": "emote-howl", "launch": "emote-launch", "creepypuppet": "dance-creepypuppet",
-    "gravity": "emote-gravity", "confused": "emote-confused", "creepycute": "emote-creepycute",
-    "smoothwalk": "dance-smoothwalk", "nervous": "idle-nervous", "gordonshuffle": "emote-gordonshuffle",
-    "rofl": "emote-rofl", "icecream": "dance-icecream", "celebrate": "emote-celebrate",
-    "panic": "emote-panic", "punkguitar": "emote-punkguitar", "singleladies": "dance-singleladies",
-    "punch": "emoji-punch", "shoppingcart": "dance-shoppingcart",
-    "tiktok4": "idle-dance-tiktok4", "nightfever": "emote-nightfever", "snowangel": "emote-snowangel",
-    "headblowup": "emote-headblowup", "roll": "emote-roll", "open": "sit-open",
-    "floorsleeping2": "idle-floorsleeping2", "teleporting": "emote-teleporting", "hearteyes": "emote-hearteyes",
-    "tiktok8": "dance-tiktok8", "angry": "idle-angry", "astronaut": "emote-astronaut",
-    "relaxed": "sit-relaxed", "fashionista": "emote-fashionista", "kissing": "emote-kissing",
-    "rainbow": "emote-rainbow", "toilet": "idle-toilet", "snowball": "emote-snowball",
-    "peekaboo": "peekaboo", "frustrated": "emote-frustrated", "jetpack": "emote-jetpack",
-    "looping": "emote-looping", "idlehowl": "idle-howl", "emotetapdance": "emote-tapdance",
-    "death": "emote-death", "secrethandshake": "emote-secrethandshake", "fruity": "dance-fruity",
-    "zombie": "dance-zombie", "robot": "emote-robot", "zombierun": "emote-zombierun",
-    "charging": "emote-charging", "fighter": "idle-fighter", "kicking": "emote-kicking",
-    "layingdown": "idle_layingdown"
-}
-EMOTES_LISTE = list(EMOTES.values())
-# ==========================
-# 4. ESSENTIEL DE LA CLASSE DU BOT
-# ==========================
-class Bot(BaseBot):
-    following_user_id, follow_task = None, None
-    bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
 
-    async def bot_life_loop(self):
-        while True:
-            if self.following_user_id is None:
-                try:
-                    self.bot_position = Position(x=round(random.uniform(1.0, 15.0), 2), y=0.0, z=round(random.uniform(1.0, 15.0), 2), facing="FrontRight")
-                    await self.highrise.walk_to(self.bot_position)
-                    await asyncio.sleep(3)
-                    await self.highrise.send_emote(random.choice(EMOTES_LISTE))
-                except: pass
-            await asyncio.sleep(15)
+class Bot(BaseBot):
+    def __init__(self):
+        super().__init__()
+        self.following_user_id = None
+        self.follow_task = None
+        self.bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
+        self.user_emote_tasks = {}
+
+    async def loop_emote_handler(self, user_id: str, emote_id: str):
+        try:
+            while True:
+                await self.highrise.send_emote(emote_id, user_id)
+                await asyncio.sleep(2)
+        except asyncio.CancelledError:
+            pass
+        except Exception:
+            pass
+
+    async def cancel_user_emote(self, user_id: str):
+        if user_id in self.user_emote_tasks:
+            task = self.user_emote_tasks[user_id]
+            if not task.done():
+                task.cancel()
+            del self.user_emote_tasks[user_id]
 
     async def follow_loop(self):
         while self.following_user_id is not None:
@@ -109,11 +62,9 @@ class Bot(BaseBot):
 
     async def on_start(self, session_metadata: SessionMetadata):
         try: 
-            # Mise à jour officielle de la bio demandée
             await self.highrise.set_bio("Créé par @gentleman_0")
         except: pass
         await self.highrise.chat("✅ <#AAFFAA>Leviae Ultimate is online! Type !help.")
-        asyncio.create_task(self.bot_life_loop())
         self.follow_task = asyncio.create_task(self.follow_loop())
 
     async def on_user_join(self, user: User, position: Position):
@@ -125,6 +76,7 @@ class Bot(BaseBot):
     async def on_user_leave(self, user: User):
         if user.id == self.following_user_id:
             self.following_user_id = None
+        await self.cancel_user_emote(user.id)
 
     async def on_chat(self, user: User, message: str) -> None:
         global CHAT_LOCKED
@@ -139,52 +91,81 @@ class Bot(BaseBot):
         if CHAT_LOCKED and user.id not in OWNERS and user.id not in MODERATORS:
             return
 
-        # Déclenchement direct de l'émote (remplace l'ancienne immédiatement)
-        if nettoye in EMOTES:
-            try: await self.highrise.send_emote(EMOTES[nettoye], user.id)
-            except: pass
+        if nettoye == "stop":
+            await self.cancel_user_emote(user.id)
             return
 
-        # Menu d'aide structuré affichant explicitement les 4 catégories
-        if nettoye == "!help":
-            await self.highrise.chat("🤖 [Leviae Help] 🌟 Cat 1 (Emotes): Type any emote name | 🏃 Cat 2 (Move): !follow, !unstuck")
-            if user.id in OWNERS or user.id in MODERATORS:
-                await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
-            else:
-                await self.highrise.chat("💬 Cat 3 (General): !help | 🔒 Cat 4 (Admin): Locked for players")
+        if nettoye in EMOTES:
+            await self.cancel_user_emote(user.id)
+            emote_id = EMOTES[nettoye]
+            self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_id))
             return
 
         if nettoye == "!follow":
             self.following_user_id = user.id
-            await self.highrise.chat(f"🏃 Following you now @{user.username}!")
+            await self.highrise.chat(f"🏃 Je te suis @{user.username}")
             return
 
         if nettoye == "!unstuck":
             self.following_user_id = None
-            self.bot_position = Position(x=5.0, y=0.0, z=5.0, facing="FrontRight")
-            await self.highrise.walk_to(self.bot_position)
-            await self.highrise.chat(f"✅ Position reset for the bot.")
+            try:
+                await self.highrise.walk_to(Position(x=4.0, y=0.0, z=4.0, facing="FrontRight"))
+                await self.highrise.chat("📍 Position réinitialisée.")
+            except: pass
             return
 
-        if user.id in OWNERS or user.id in MODERATORS:
-            if nettoye == "!come":
-                self.following_user_id = None
-                try:
-                    room_users = await self.highrise.get_room_users()
-                    for u, pos in room_users.content:
-                        if u.id == user.id and isinstance(pos, Position):
-                            self.bot_position = Position(x=pos.x, y=pos.y, z=pos.z, facing="FrontRight")
-                            await self.highrise.walk_to(self.bot_position)
-                            await self.highrise.chat("Coming over right now!")
-                except: pass
-                return
+        if nettoye == "!come" and (user.id in OWNERS or user.id in MODERATORS):
+            try:
+                users = await self.highrise.get_room_users()
+                for u, pos in users.content:
+                    if u.id == user.id and isinstance(pos, Position):
+                        await self.highrise.walk_to(Position(x=pos.x + 0.5, y=pos.y, z=pos.z, facing="FrontLeft"))
+            except: pass
+            return
 
-            if nettoye == "!lock":
-                CHAT_LOCKED = True
-                await self.highrise.chat("🔒 Room chat is now locked. Only staff can talk.")
-                return
+        if nettoye == "!lock" and (user.id in OWNERS or user.id in MODERATORS):
+            CHAT_LOCKED = True
+            await self.highrise.chat("🔒 Le chat a été verrouillé par le staff.")
+            return
 
-            if nettoye == "!unlock":
-                CHAT_LOCKED = False
-                await self.highrise.chat("🔓 Room chat is now unlocked.")
-                return
+        if nettoye == "!unlock" and (user.id in OWNERS or user.id in MODERATORS):
+            CHAT_LOCKED = False
+            await self.highrise.chat("🔓 Le chat est maintenant déverrouillé.")
+            return
+
+        if nettoye in ["!list", "!liste"]:
+            await self.highrise.chat("📖 [Emotes List] Tapez au choix : !list1 (1-50) | !list2 (51-100) | !list3 (101-149) | !list4 (150-175)")
+            return
+
+        if nettoye == "!list1":
+            await self.highrise.chat("📜 1:swagbounce 2:duckwalk 3:pennywise 4:floorsleeping 5:laidback 6:ghost 7:annoyed 8:touch 9:jinglebell 10:space 11:metal 12:flex 13:orangejustice 14:shy 15:blowkiss")
+            await self.highrise.chat("📜 16:stargazer 17:knock 18:curtsy 19:slap 20:singing 21:swinging 22:kawai 23:pose9 24:tiktok9 25:floss 26:breakdance 27:wild 28:hipshake 29:griddy 30:shrink")
+            await self.highrise.chat("📜 31:spiritual 32:martial 33:hero 34:tiktok2 35:popularvibe 36:headball 37:trueheart 38:mine 39:robotic 40:graceful 41:meditate 42:frollicking 43:ballet 44:woah 45:shuffle")
+            await self.highrise.chat("📜 46:frog 47:lying 48:laughing2 49:boxer 50:tiktok10")
+            return
+
+        if nettoye == "!list2":
+            await self.highrise.chat("📜 51:attention 52:dab 53:timejump 54:puppet 55:aerobics 56:guitar 57:tiktok7 58:tiktok11 59:tapdance 60:pose10 61:scared 62:arrogance 63:wrong 64:halo 65:anime")
+            await self.highrise.chat("📜 66:hyped 67:boo 68:trampoline 69:emojighost 70:float 71:sleigh 72:cheerleader 73:ninjarun 74:gangnam 75:snake 76:pinguin 77:loopaerobics 78:howl 79:launch 80:creepypuppet")
+            await self.highrise.chat("📜 81:gravity 82:confused 83:creepycute 84:smoothwalk 85:nervous 86:gordonshuffle 87:rofl 88:icecream 89:celebrate 90:panic 91:punkguitar 92:singleladies 93:punch 94:shoppingcart 95:tiktok4")
+            await self.highrise.chat("📜 96:nightfever 97:snowangel 98:headblowup 99:roll 100:open")
+            return
+
+        if nettoye == "!list3":
+            await self.highrise.chat("📜 101:superrun 102:disappear 103:layingdown2 104:uwu 105:harlemshake 106:blackpink 107:employee 108:cute 109:tiktok14 110:russian 111:handstand 112:elbowbump 113:floating 114:mindblown 115:zombie2")
+            await self.highrise.chat("📜 116:disco 117:jumpb 118:heartshape 119:judochop 120:levelup 121:peace 122:suckthumb 123:think 124:headbobbing 125:tired 126:crying 127:dizzy 128:pray 129:exasperated 130:sad")
+            await self.highrise.chat("📜 131:deathdrop 132:hot 133:hug 134:sadloop 135:lookup 136:posh 137:wings 138:there 139:superpunch 140:sleep 141:weird 142:fainting 143:monsterfail 144:hero2 145:handsup")
+            await self.highrise.chat("📜 146:fail2 147:ropepull 148:bow 149:model")
+            return
+
+        if nettoye == "!list4":
+            await self.highrise.chat("📜 150:splitsdrop 151:sick 152:embarrassed 153:proposing 154:enthusiastic 155:cold 156:telekinesis 157:hadoken 158:sneeze 159:fail1 160:naughty 161:hugyourself 162:theatrical")
+            await self.highrise.chat("📜 163:greedy 164:baseball 165:sumo 166:death2 167:smirking 168:voguehands 169:eyeroll 170:giveup 171:bunnyhop 172:exasperatedb 173:happy 174:heart 175:photo")
+            return
+
+        if nettoye == "!help":
+            await self.highrise.chat("🤖 [Leviae Help] 🌟 Cat 1 (Emotes): Tape le chiffre (1-175) OU le nom. Écris !list pour voir le catalogue.")
+            await self.highrise.chat("🏃 [Leviae Help] Cat 2 (Move): Écris !follow pour que je te suive, ou !unstuck pour me réinitialiser.")
+            if user.id in OWNERS or user.id in MODERATORS:
+                await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
+            return
