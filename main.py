@@ -32,12 +32,16 @@ class Bot(BaseBot):
         self.bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
         self.user_emote_tasks = {}
 
-    async def loop_emote_handler(self, user_id: str, emote_id: str):
+    async def loop_emote_handler(self, user_id: str, emote_id: str, est_infini: bool):
         try:
-            while True:
+            if est_infini:
+                # Si c'est freshprince, on l'envoie une fois et elle danse à l'infini toute seule
                 await self.highrise.send_emote(emote_id, user_id)
-                # FIXÉ À 25 SECONDES : Temps maximal pour laisser toute la danse se dérouler
-                await asyncio.sleep(25.0)
+            else:
+                # Pour toutes les autres émotes, boucle infinie automatique toutes les 7 secondes
+                while True:
+                    await self.highrise.send_emote(emote_id, user_id)
+                    await asyncio.sleep(7.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -49,7 +53,7 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    await asyncio.wait_for(task, timeout=1.0)
+                    await asyncio.wait_for(task, timeout=0.5)
                 except:
                     pass
             del self.user_emote_tasks[user_id]
@@ -101,12 +105,16 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
+            # Nettoie instantanément l'ancienne tâche pour changer d'émote tout de suite
             await self.cancel_user_emote(user.id)
-            # RÉDUIT AU MINIMUM : 0.1 seconde pour un enchaînement immédiat
-            await asyncio.sleep(0.1)
             
+            # Détection spéciale pour freshprince
+            est_infini = "freshprince" in nettoye
             emote_id = EMOTES[nettoye]
-            self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_id))
+            
+            self.user_emote_tasks[user.id] = asyncio.create_task(
+                self.loop_emote_handler(user.id, emote_id, est_infini)
+            )
             return
 
         if nettoye == "!follow":
