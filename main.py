@@ -34,11 +34,10 @@ class Bot(BaseBot):
 
     async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            # Traitement 100% normal et identique pour tout le monde en boucle infinie
             while True:
                 await self.highrise.send_emote(emote_id, user_id)
-                # FIXÉ À 25 SECONDES : Temps requis pour que n'importe quelle danse aille au bout
-                await asyncio.sleep(25.0)
+                # 10 secondes : Temps universel pour finir la danse proprement
+                await asyncio.sleep(10.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -50,7 +49,8 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    await asyncio.wait_for(task, timeout=0.5)
+                    # FORCE Python à attendre l'arrêt réel de l'ancienne boucle
+                    await task 
                 except:
                     pass
             del self.user_emote_tasks[user_id]
@@ -102,10 +102,12 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
+            # 1. On détruit TRÈS proprement l'ancienne tâche pour qu'elle s'arrête immédiatement
             await self.cancel_user_emote(user.id)
-            # Petite attente de stabilisation réseau exigée avant la boucle
-            await asyncio.sleep(0.5)
+            # 2. Micro-pause de sécurité (0.2s) pour laisser respirer l'API Highrise
+            await asyncio.sleep(0.2)
             
+            # 3. Lancement de la nouvelle boucle toute neuve
             emote_id = EMOTES[nettoye]
             self.user_emote_tasks[user.id] = asyncio.create_task(
                 self.loop_emote_handler(user.id, emote_id)
