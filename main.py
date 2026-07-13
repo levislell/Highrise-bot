@@ -35,8 +35,10 @@ class Bot(BaseBot):
     async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
             while True:
+                # Force l'attente de la réponse du serveur Highrise
                 await self.highrise.send_emote(emote_id, user_id)
-                await asyncio.sleep(2)
+                # Laisse 7 secondes pour jouer toute l'animation sans bégayer
+                await asyncio.sleep(7.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -97,6 +99,8 @@ class Bot(BaseBot):
 
         if nettoye in EMOTES:
             await self.cancel_user_emote(user.id)
+            # Petite pause anti-spam pour purger les paquets réseau avant la nouvelle boucle
+            await asyncio.sleep(0.5)
             emote_id = EMOTES[nettoye]
             self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_id))
             return
@@ -134,7 +138,7 @@ class Bot(BaseBot):
             return
 
         if nettoye in ["!list", "!liste"]:
-            await self.highrise.chat("📖 [Emotes List] Tapez au choix : !list1 (1-50) | !list2 (51-100) | !list3 (101-149) | !list4 (150-175)")
+            await self.highrise.chat("📖 [Emotes List] Tapez au choix : !list1 (1-50) | !list2 (51-100) | !list3 (101-149) | !list4 (150-178)")
             return
 
         if nettoye == "!list1":
@@ -159,12 +163,15 @@ class Bot(BaseBot):
             return
 
         if nettoye == "!list4":
+            # Le catalogue pointe maintenant vers le maximum de 178
             await self.highrise.chat("📜 150:splitsdrop 151:sick 152:embarrassed 153:proposing 154:enthusiastic 155:cold 156:telekinesis 157:hadoken 158:sneeze 159:fail1 160:naughty 161:hugyourself 162:theatrical")
             await self.highrise.chat("📜 163:greedy 164:baseball 165:sumo 166:death2 167:smirking 168:voguehands 169:eyeroll 170:giveup 171:bunnyhop 172:exasperatedb 173:happy 174:heart 175:photo")
+            await self.highrise.chat("📜 176:émote176 177:émote177 178:émote178")
             return
 
         if nettoye == "!help":
-            await self.highrise.chat("🤖 [Leviae Help] 🌟 Cat 1 (Emotes): Tape le chiffre (1-175) OU le nom. Écris !list pour voir le catalogue.")
+            # Remplacement des textes d'aide pour afficher 178
+            await self.highrise.chat("🤖 [Leviae Help] 🌟 Cat 1 (Emotes): Tape le chiffre (1-178) OU le nom. Écris !list pour voir le catalogue.")
             await self.highrise.chat("🏃 [Leviae Help] Cat 2 (Move): Écris !follow pour que je te suive, ou !unstuck pour me réinitialiser.")
             if user.id in OWNERS or user.id in MODERATORS:
                 await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
