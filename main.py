@@ -32,16 +32,13 @@ class Bot(BaseBot):
         self.bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
         self.user_emote_tasks = {}
 
-    async def loop_emote_handler(self, user_id: str, emote_id: str, est_infini: bool):
+    async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            if est_infini:
-                # Si c'est freshprince, on l'envoie une fois et elle danse à l'infini toute seule
+            # Boucle standard et identique pour TOUTES les émotes du dictionnaire
+            while True:
                 await self.highrise.send_emote(emote_id, user_id)
-            else:
-                # Pour toutes les autres émotes, boucle infinie automatique toutes les 7 secondes
-                while True:
-                    await self.highrise.send_emote(emote_id, user_id)
-                    await asyncio.sleep(7.0)
+                # 5.5 secondes : le temps moyen idéal pour enchaîner en boucle sans coupure
+                await asyncio.sleep(5.5)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -105,15 +102,13 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # Nettoie instantanément l'ancienne tâche pour changer d'émote tout de suite
+            # Nettoyage et enchaînement immédiat
             await self.cancel_user_emote(user.id)
+            await asyncio.sleep(0.1)
             
-            # Détection spéciale pour freshprince
-            est_infini = "freshprince" in nettoye
             emote_id = EMOTES[nettoye]
-            
             self.user_emote_tasks[user.id] = asyncio.create_task(
-                self.loop_emote_handler(user.id, emote_id, est_infini)
+                self.loop_emote_handler(user.id, emote_id)
             )
             return
 
