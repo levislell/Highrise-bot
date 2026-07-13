@@ -32,16 +32,13 @@ class Bot(BaseBot):
         self.bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
         self.user_emote_tasks = {}
 
-    async def loop_emote_handler(self, user_id: str, emote_id: str, est_infinie: bool):
+    async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            if est_infinie:
-                # Émote infinie d'appartement (freshprince...) : exécutée une fois pour ne pas couper
+            # Boucle infinie universelle et strictement identique pour TOUTES les émotes
+            while True:
                 await self.highrise.send_emote(emote_id, user_id)
-            else:
-                # Émote standard : boucle propre de 10 secondes pour tout finir sans bégaiement
-                while True:
-                    await self.highrise.send_emote(emote_id, user_id)
-                    await asyncio.sleep(10.0)
+                # Remis à 5.5 secondes par défaut pour tout le catalogue
+                await asyncio.sleep(5.5)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -105,14 +102,12 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
+            # Annulation et relance immédiate (sans aucun temps mort ou délai d'attente)
             await self.cancel_user_emote(user.id)
             
-            # Détection automatique des émotes sans fin du jeu
-            est_infinie = nettoye in ["freshprince", "floorsleeping", "laidback", "meditate"]
             emote_id = EMOTES[nettoye]
-            
             self.user_emote_tasks[user.id] = asyncio.create_task(
-                self.loop_emote_handler(user.id, emote_id, est_infinie)
+                self.loop_emote_handler(user.id, emote_id)
             )
             return
 
