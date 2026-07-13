@@ -34,14 +34,13 @@ class Bot(BaseBot):
 
     async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            # Suppression du while True. Le bot envoie l'émote une fois...
+            # Le bot envoie l'émote
             await self.highrise.send_emote(emote_id, user_id)
             
-            # Attente de 15 secondes pour s'assurer que même les danses les plus longues finissent à 100%
-            await asyncio.sleep(15.0)
+            # TIMING AJUSTÉ : 5 secondes d'attente pour s'enchaîner rapidement sans coupure
+            await asyncio.sleep(5.0)
             
-            # Le script recrée une nouvelle tâche propre pour s'auto-relancer.
-            # Cela brise la chaîne du "spam" réseau aux yeux de Highrise.
+            # Système d'auto-relance propre pour le réseau
             self.user_emote_tasks[user_id] = asyncio.create_task(self.loop_emote_handler(user_id, emote_id))
         except asyncio.CancelledError:
             pass
@@ -106,11 +105,9 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # Nettoyage strict et immédiat de l'ancienne tâche
             await self.cancel_user_emote(user.id)
             await asyncio.sleep(0.5)
             
-            # Lancement de la première exécution
             emote_id = EMOTES[nettoye]
             self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_id))
             return
