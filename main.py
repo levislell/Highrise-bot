@@ -36,8 +36,8 @@ class Bot(BaseBot):
         try:
             while True:
                 await self.highrise.send_emote(emote_id, user_id)
-                # 12 secondes : temps de sécurité maximal pour laisser TOUTE la danse se dérouler
-                await asyncio.sleep(12.0)
+                # MODIFICATION : Passé à 14 secondes pour que les dernières étapes de la danse se finissent
+                await asyncio.sleep(14.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -49,7 +49,6 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    # Attente stricte pour s'assurer que l'ancienne tâche s'arrête sur le réseau
                     await asyncio.wait_for(task, timeout=1.0)
                 except:
                     pass
@@ -102,9 +101,8 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # Nettoyage rigoureux avant de lancer l'animation
             await self.cancel_user_emote(user.id)
-            # Pause d'une seconde pour éviter que l'API Highrise ne sature et réinitialise l'avatar
+            # Temps d'attente d'une seconde pour un nouveau lancement non modifié
             await asyncio.sleep(1.0)
             
             emote_id = EMOTES[nettoye]
