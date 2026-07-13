@@ -34,10 +34,15 @@ class Bot(BaseBot):
 
     async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            while True:
-                await self.highrise.send_emote(emote_id, user_id)
-                # 11 secondes : Laisse l'émote finir ET évite le filtre anti-spam de Highrise
-                await asyncio.sleep(11.0)
+            # Suppression du while True. Le bot envoie l'émote une fois...
+            await self.highrise.send_emote(emote_id, user_id)
+            
+            # Attente de 15 secondes pour s'assurer que même les danses les plus longues finissent à 100%
+            await asyncio.sleep(15.0)
+            
+            # Le script recrée une nouvelle tâche propre pour s'auto-relancer.
+            # Cela brise la chaîne du "spam" réseau aux yeux de Highrise.
+            self.user_emote_tasks[user_id] = asyncio.create_task(self.loop_emote_handler(user_id, emote_id))
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -49,7 +54,6 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    # Force Python à attendre l'arrêt physique de la tâche réseau
                     await asyncio.wait_for(task, timeout=1.0)
                 except:
                     pass
@@ -102,12 +106,11 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # 1. On ferme l'ancienne tâche
+            # Nettoyage strict et immédiat de l'ancienne tâche
             await self.cancel_user_emote(user.id)
-            # 2. Pause d'une seconde complète pour vider la file d'attente réseau de Highrise
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(0.5)
             
-            # 3. Lancement sécurisé de la nouvelle émote
+            # Lancement de la première exécution
             emote_id = EMOTES[nettoye]
             self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_id))
             return
