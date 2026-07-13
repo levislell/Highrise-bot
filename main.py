@@ -34,11 +34,11 @@ class Bot(BaseBot):
 
     async def loop_emote_handler(self, user_id: str, emote_id: str):
         try:
-            # Boucle infinie universelle et strictement identique pour TOUTES les émotes
+            # Traitement 100% normal et identique pour tout le monde en boucle infinie
             while True:
                 await self.highrise.send_emote(emote_id, user_id)
-                # Remis à 5.5 secondes par défaut pour tout le catalogue
-                await asyncio.sleep(5.5)
+                # FIXÉ À 25 SECONDES : Temps requis pour que n'importe quelle danse aille au bout
+                await asyncio.sleep(25.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -50,7 +50,7 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    await asyncio.wait_for(task, timeout=0.2)
+                    await asyncio.wait_for(task, timeout=0.5)
                 except:
                     pass
             del self.user_emote_tasks[user_id]
@@ -102,8 +102,9 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # Annulation et relance immédiate (sans aucun temps mort ou délai d'attente)
             await self.cancel_user_emote(user.id)
+            # Petite attente de stabilisation réseau exigée avant la boucle
+            await asyncio.sleep(0.5)
             
             emote_id = EMOTES[nettoye]
             self.user_emote_tasks[user.id] = asyncio.create_task(
