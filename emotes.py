@@ -174,5 +174,6 @@ EMOTES = {
     "174": "emote-heartfingers", "heart": "emote-heartfingers",
     "175": "emote-collab-photo-left", "photo": "emote-collab-photo-left",
     "176": "dance-freshprince", "freshprince": "dance-freshprince",
-    "177": "dance-twerk", "twerk": "dance-twerk"
+    "177": "dance-twerk", "twerk": "dance-twerk",
+    "178": "sit-idle-cute", "rest": "sit-idle-cute"
 }
