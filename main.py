@@ -32,13 +32,16 @@ class Bot(BaseBot):
         self.bot_position = Position(x=0.0, y=0.0, z=0.0, facing="FrontRight")
         self.user_emote_tasks = {}
 
-    async def loop_emote_handler(self, user_id: str, emote_id: str):
+    async def loop_emote_handler(self, user_id: str, emote_id: str, est_infinie: bool):
         try:
-            # Boucle standard et identique pour TOUTES les émotes du dictionnaire
-            while True:
+            if est_infinie:
+                # Émote infinie d'appartement (freshprince...) : exécutée une fois pour ne pas couper
                 await self.highrise.send_emote(emote_id, user_id)
-                # 5.5 secondes : le temps moyen idéal pour enchaîner en boucle sans coupure
-                await asyncio.sleep(5.5)
+            else:
+                # Émote standard : boucle propre de 10 secondes pour tout finir sans bégaiement
+                while True:
+                    await self.highrise.send_emote(emote_id, user_id)
+                    await asyncio.sleep(10.0)
         except asyncio.CancelledError:
             pass
         except Exception:
@@ -50,7 +53,7 @@ class Bot(BaseBot):
             if not task.done():
                 task.cancel()
                 try:
-                    await asyncio.wait_for(task, timeout=0.5)
+                    await asyncio.wait_for(task, timeout=0.2)
                 except:
                     pass
             del self.user_emote_tasks[user_id]
@@ -102,13 +105,14 @@ class Bot(BaseBot):
             return
 
         if nettoye in EMOTES:
-            # Nettoyage et enchaînement immédiat
             await self.cancel_user_emote(user.id)
-            await asyncio.sleep(0.1)
             
+            # Détection automatique des émotes sans fin du jeu
+            est_infinie = nettoye in ["freshprince", "floorsleeping", "laidback", "meditate"]
             emote_id = EMOTES[nettoye]
+            
             self.user_emote_tasks[user.id] = asyncio.create_task(
-                self.loop_emote_handler(user.id, emote_id)
+                self.loop_emote_handler(user.id, emote_id, est_infinie)
             )
             return
 
