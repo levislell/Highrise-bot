@@ -25,10 +25,6 @@ INSULTES_LISTE = ["fdp", "con", "salope"]
 GREETING_RESPONSES = ["Hello! 👋", "Hi there! 🎉", "Welcome! 🌟"]
 
 class Bot(BaseBot):
-    async def arun(self, room_id: str, api_token: str, room_password: str = "", invite_id: str = "") -> None:
-        invite_id = "6a59a25f1020bbc017ace3a3"
-        return await super().arun(room_id, api_token, room_password=room_password, invite_id=invite_id)
-
     def __init__(self):
         super().__init__()
         self.following_user_id = None
@@ -187,6 +183,7 @@ class Bot(BaseBot):
             if user.id in OWNERS or user.id in MODERATORS:
                 await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
             return
+
 if __name__ == "__main__":
     from highrise.__main__ import main
     main()
