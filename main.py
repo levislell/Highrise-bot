@@ -7,12 +7,12 @@ from highrise.models import SessionMetadata
 # Initialisation Flask pour la disponibilité en ligne
 app = Flask('')
 @app.route('/')
-def home(): return "Le bot Leviae Pro Ultimate fonctionne en ligne !"
+def home(): return "Le botroom11 Pro Ultimate fonctionne en ligne !"
 def run_web_server(): app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
 Thread(target=run_web_server).start()
 
 # === CONFIGURATION GLOBALE ===
-BOT_USERNAME = "leviae"
+BOT_USERNAME = "botRoom11"
 OWNERS = ["65592020383c55ed5c45aabd"]
 MODERATORS_BOT = ["65592020383c55ed5c45aabd"] 
 VIP_LIST = [] 
