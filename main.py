@@ -344,10 +344,13 @@ class Bot(BaseBot):
             return
 
         # --- 3. COMMANDES UTILISATEUR VALIDES ---
+                # --- 3. COMMANDES UTILISATEUR VALIDES ---
+        # Remplacez tout le bloc ci-dessous par cette version réalignée (8 espaces)
         if nettoye == "stop":
             await self.cancel_user_emote(user.id)
             return
-                if nettoye == "!id":
+
+        if nettoye == "!id":
             await self.highrise.chat(f"🆔 @{user.username}, ton ID Highrise est : {user.id}")
             return
 
@@ -362,94 +365,21 @@ class Bot(BaseBot):
             self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_officielle))
             return
 
-        if nettoye == "!follow":
-            self.following_user_id = user.id
-            await self.highrise.chat(f"🏃 Je te suis @{user.username}")
-            return
-        if nettoye == "!unstuck":
-            self.following_user_id = None
-            try: await self.highrise.walk_to(Position(x=4.0, y=0.0, z=4.0, facing="FrontRight"))
-            except: pass
-            return
-
-        # Jeux & Divertissement
-        if nettoye.startswith("!rate"):
-            cible = message[5:].strip()
-            if not cible: cible = f"@{user.username}"
-            await self.highrise.chat(f"📊 Je donne la note de {random.randint(1, 10)}/10 à {cible} ! 🔥")
-            return
-        if nettoye.startswith("!love"):
-            await self.highrise.chat(f"❤️ Compatibilité amoureuse : {random.randint(0, 100)}% !")
-            return
-        if nettoye.startswith("!8ball"):
-            reponses = ["Oui absolument 🌟", "C'est certain 👌", "Essaie encore 🔄", "C'est impossible ❌"]
-            await self.highrise.chat(f"🔮 8-Ball : {random.choice(reponses)}")
-            return
-        if nettoye == "!roll":
-            await self.highrise.chat(f"🎲 @{user.username} a fait : {random.randint(1, 100)} !")
-            return
-        if nettoye.startswith("!kiss"):
-            cible = message[5:].strip()
-            if cible: await self.highrise.chat(f"💋 @{user.username} envoie un gros bisou à {cible} ! 💋")
-            return
-        if nettoye.startswith("!slap"):
-            cible = message[5:].strip()
-            if cible: await self.highrise.chat(f"💥 CLAP ! @{user.username} gifle {cible} ! 🤣")
-            return
-        if nettoye == "!joke":
-            blagues = ["Quel est le comble pour un électricien ? De ne pas être au courant !", "Pourquoi les oiseaux volent vers le sud ? Parce que c'est trop long d'y aller à pied !"]
-            await self.highrise.chat(f"🤣 {random.choice(blagues)}")
-            return
-        if nettoye == "!wallet":
-            lvl = PLAYER_XP[user.id]["level"]
-            xp = PLAYER_XP[user.id]["xp"]
-            await self.highrise.chat(f"💳 [Profil] Niveau : {lvl} | XP : {xp}/{lvl*5}")
-            return
-        if nettoye == "!top":
-            tri = sorted(PLAYER_XP.values(), key=lambda x: x["level"], reverse=True)[:3]
-            txt = "🏆 [Classement] :\n"
-            for i, p in enumerate(tri): txt += f"{i+1}. @{p['username']} (Niv {p['level']})\n"
-            await self.highrise.chat(txt)
-            return
-        # Listes d'aide
-                # --- LOGIQUE COMPLETE DES LISTES ---
-        if nettoye in ["!list", "!liste"]:
-            await self.highrise.chat("📖 [Listes] : Tape !list1 (1-45) | !list2 (46-90) | !list3 (91-135) | !list4 (136-180)")
-            return
-
-        if nettoye == "!list1":
-            await self.highrise.chat("🕺 [LISTE 1] : 1: Swagbounce, 2: Duckwalk, 3: Pennywise, 13: Orangejustice, 25: Floss, 29: Griddy")
-            return
-
-        if nettoye == "!list2":
-            await self.highrise.chat("🕺 [LISTE 2] : 46: Frog, 49: Boxer, 52: Dab, 65: Anime, 74: Gangnam, 87: Rofl")
-            return
-
-        if nettoye == "!list3":
-            await self.highrise.chat("🕺 [LISTE 3] : 93: Punch, 96: Nightfever, 99: Roll, 104: Uwu, 118: Heartshape, 126: Crying")
-            return
-
-        if nettoye == "!list4":
-            await self.highrise.chat("🕺 [LISTE 4] : 137: Wings, 140: Sleep, 144: Hero2, 157: Hadoken, 177: Twerk, 179: Afk")
-            return
-
-
+        # ... (Conservez ici le reste de votre logique, assurez-vous que chaque 'if' est bien aligné à 8 espaces du bord gauche)
+        # Liste des commandes: !follow, !unstuck, !rate, !love, !8ball, !roll, !kiss, !slap, !joke, !wallet, !top, !list, !help
+        
+        # Exemple de fin de fonction correctement indentée :
         if nettoye == "!help":
-            await self.highrise.chat("✨▬▬▬▬▬ <#FFD700>ＬＥＶＩＡＥ  ＰＲＯ</#FFD700> ▬▬▬▬▬✨")
-            await self.highrise.chat("🕺 <#00FFFF>✦ EMOTES :</#00FFFF> Écris le chiffre <#ADFF2F>(1-180)</#ADFF2F> ou le nom ! Tape <#FF69B4>!list</#FF69B4>")
-            await self.highrise.chat("🎮 <#00FFFF>✦ JEUX :</#00FFFF> !rate | !love | !8ball | !roll | !kiss | !slap | !joke")
-            await self.highrise.chat("⚙️ <#00FFFF>✦ STATS :</#00FFFF> !wallet | !top | !id | !ping")
-            await self.highrise.chat("🏃 <#00FFFF>✦ MOVES :</#00FFFF> !follow | !unstuck | stop")
-            if user.id in OWNERS or user.id in MODERATORS_BOT:
-                await self.highrise.chat("🛡️ <#FF4500>✦ STAFF :</#FF4500> !lock | !unlock | !come | !shout | !kick | !mute")
-            await self.highrise.chat("✨▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬✨")
+            await self.highrise.chat("✨▬▬▬▬▬ <#FFD700>ＬＥＶＩＡＥ ＰＲＯ</#FFD700> ▬▬▬▬▬✨")
+            # ... (autres messages)
             return
 
-        # MESSAGE D'ERREUR (Déplacé ici pour ne plus bloquer !help et !list)
+        # MESSAGE D'ERREUR (Dernière condition avant la fin de la fonction)
         if message.startswith("!") or (message.isdigit() and nettoye not in EMOTES):
-            await self.highrise.chat(f"❌ Désolé chef @{user.username}, j'ai pas ça dans ma liste ! Tape !help")
+            await self.highrise.chat(f"❌ Désolé @{user.username}, commande inconnue ! Tape !help")
             return
 
+# --- FIN DU FICHIER ---
 if __name__ == "__main__":
     from highrise.__main__ import main
     main()
