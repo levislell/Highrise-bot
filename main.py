@@ -25,6 +25,10 @@ INSULTES_LISTE = ["fdp", "con", "salope"]
 GREETING_RESPONSES = ["Hello! 👋", "Hi there! 🎉", "Welcome! 🌟"]
 
 class Bot(BaseBot):
+    async def arun(self, room_id: str, api_token: str, room_password: str = "", invite_id: str = "") -> None:
+        invite_id = "6a599abaa88afc2ecf989163"
+        return await super().arun(room_id, api_token, room_password=room_password, invite_id=invite_id)
+
     def __init__(self):
         super().__init__()
         self.following_user_id = None
@@ -53,8 +57,6 @@ class Bot(BaseBot):
                     pass
             del self.user_emote_tasks[user_id]
         
-        # Action secrète : On envoie instantanément une émote flash (le petit signe de main) 
-        # pour couper net la danse en cours sur le serveur de Highrise
         try:
             await self.highrise.send_emote("idle-wave", user_id)
         except:
