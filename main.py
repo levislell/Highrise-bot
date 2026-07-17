@@ -240,7 +240,7 @@ class Bot(BaseBot):
         try:
             while True:
                 await self.highrise.send_emote(emote_id, user_id)
-                await asyncio.sleep(1.5) 
+                await asyncio.sleep(5) 
         except asyncio.CancelledError: pass
         except Exception: pass
 
