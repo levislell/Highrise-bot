@@ -92,7 +92,7 @@ EMOTES = {
     "46": "emote-frog", "frog": "emote-frog",
     "47": "emote-lying", "lying": "emote-lying",
     "48": "emote-laughing2", "laughing2": "emote-laughing2",
-    "49": "emote-boxer", "boxer", "emote-boxer",
+    "49": "emote-boxer", "boxer": "emote-boxer",
     "50": "dance-tiktok10", "tiktok10": "dance-tiktok10",
     "51": "emote-attention", "attention": "emote-attention",
     "52": "dance-dab", "dab": "dance-dab",
