@@ -187,3 +187,6 @@ class Bot(BaseBot):
             if user.id in OWNERS or user.id in MODERATORS:
                 await self.highrise.chat("🛡️ [Staff Only] 💬 Cat 3 (General): !help | 🛡️ Cat 4 (Admin): !lock, !unlock, !come")
             return
+if __name__ == "__main__":
+    from highrise.__main__ import main
+    main()
