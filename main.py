@@ -360,7 +360,6 @@ class Bot(BaseBot):
             self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_officielle))
             return
 
-
         if nettoye == "!follow":
             self.following_user_id = user.id
             await self.highrise.chat(f"🏃 Je te suis @{user.username}")
