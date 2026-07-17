@@ -343,7 +343,6 @@ class Bot(BaseBot):
         if CHAT_LOCKED and user.id not in OWNERS and user.id not in MODERATORS_BOT:
             return
 
-        # --- 3. COMMANDES UTILISATEUR VALIDES ---
                 # --- 3. COMMANDES UTILISATEUR VALIDES ---
         # Remplacez tout le bloc ci-dessous par cette version réalignée (8 espaces)
         if nettoye == "stop":
