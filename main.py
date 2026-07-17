@@ -347,13 +347,15 @@ class Bot(BaseBot):
         if nettoye == "stop":
             await self.cancel_user_emote(user.id)
             return
-        if nettoye == "!id":
+                if nettoye == "!id":
             await self.highrise.chat(f"🆔 @{user.username}, ton ID Highrise est : {user.id}")
             return
+
         if nettoye == "!ping":
             await self.highrise.chat(f"🏓 Pong @{user.username} ! Je fonctionne parfaitement.")
             return
-                        if nettoye in EMOTES:
+
+        if nettoye in EMOTES:
             await self.cancel_user_emote(user.id)
             await asyncio.sleep(0.2)
             emote_officielle = EMOTES[nettoye].strip()
