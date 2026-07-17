@@ -411,9 +411,27 @@ class Bot(BaseBot):
             await self.highrise.chat(txt)
             return
         # Listes d'aide
+                # --- LOGIQUE COMPLETE DES LISTES ---
         if nettoye in ["!list", "!liste"]:
-            await self.highrise.chat("📖 [Listes] : !list1 | !list2 | !list3 | !list4")
+            await self.highrise.chat("📖 [Listes] : Tape !list1 (1-45) | !list2 (46-90) | !list3 (91-135) | !list4 (136-180)")
             return
+
+        if nettoye == "!list1":
+            await self.highrise.chat("🕺 [LISTE 1] : 1: Swagbounce, 2: Duckwalk, 3: Pennywise, 13: Orangejustice, 25: Floss, 29: Griddy")
+            return
+
+        if nettoye == "!list2":
+            await self.highrise.chat("🕺 [LISTE 2] : 46: Frog, 49: Boxer, 52: Dab, 65: Anime, 74: Gangnam, 87: Rofl")
+            return
+
+        if nettoye == "!list3":
+            await self.highrise.chat("🕺 [LISTE 3] : 93: Punch, 96: Nightfever, 99: Roll, 104: Uwu, 118: Heartshape, 126: Crying")
+            return
+
+        if nettoye == "!list4":
+            await self.highrise.chat("🕺 [LISTE 4] : 137: Wings, 140: Sleep, 144: Hero2, 157: Hadoken, 177: Twerk, 179: Afk")
+            return
+
 
         if nettoye == "!help":
             await self.highrise.chat("✨▬▬▬▬▬ <#FFD700>ＬＥＶＩＡＥ  ＰＲＯ</#FFD700> ▬▬▬▬▬✨")
