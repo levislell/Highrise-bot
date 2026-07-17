@@ -353,13 +353,14 @@ class Bot(BaseBot):
         if nettoye == "!ping":
             await self.highrise.chat(f"🏓 Pong @{user.username} ! Je fonctionne parfaitement.")
             return
-        if nettoye in EMOTES:
+                if nettoye in EMOTES:
             await self.cancel_user_emote(user.id)
             await asyncio.sleep(0.2)
-            self.user_emote_tasks[user.id] = asyncio.create_task(
-                self.loop_emote_handler(user.id, EMOTES[nettoye])
-            )
+            # Le .strip() nettoie les espaces invisibles comme sur le 144
+            emote_officielle = EMOTES[nettoye].strip()
+            self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_officielle))
             return
+
         if nettoye == "!follow":
             self.following_user_id = user.id
             await self.highrise.chat(f"🏃 Je te suis @{user.username}")
