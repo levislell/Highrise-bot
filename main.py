@@ -26,7 +26,7 @@ GREETING_RESPONSES = ["Hello! 👋", "Hi there! 🎉", "Welcome! 🌟"]
 
 class Bot(BaseBot):
     async def arun(self, room_id: str, api_token: str, room_password: str = "", invite_id: str = "") -> None:
-        invite_id = "6a599abaa88afc2ecf989163"
+        invite_id = "6a59a25f1020bbc017ace3a3"
         return await super().arun(room_id, api_token, room_password=room_password, invite_id=invite_id)
 
     def __init__(self):
