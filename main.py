@@ -343,8 +343,10 @@ class Bot(BaseBot):
         if CHAT_LOCKED and user.id not in OWNERS and user.id not in MODERATORS_BOT:
             return
 
-                # --- 3. COMMANDES UTILISATEUR VALIDES ---
-        # Remplacez tout le bloc ci-dessous par cette version réalignée (8 espaces)
+                        # ==========================================================
+        # --- 3. BLOC COMPLET DES COMMANDES UTILISATEURS ET JEUX ---
+        # ==========================================================
+
         if nettoye == "stop":
             await self.cancel_user_emote(user.id)
             return
@@ -357,28 +359,148 @@ class Bot(BaseBot):
             await self.highrise.chat(f"🏓 Pong @{user.username} ! Je fonctionne parfaitement.")
             return
 
+        # --- DÉCLENCHEMENT DES EMOTES (CHIFFRES DE 1 À 180 & NOMS) ---
         if nettoye in EMOTES:
             await self.cancel_user_emote(user.id)
             await asyncio.sleep(0.2)
+            # Le .strip() nettoie les espaces invisibles cachés (comme sur le 144)
             emote_officielle = EMOTES[nettoye].strip()
-            self.user_emote_tasks[user.id] = asyncio.create_task(self.loop_emote_handler(user.id, emote_officielle))
+            self.user_emote_tasks[user.id] = asyncio.create_task(
+                self.loop_emote_handler(user.id, emote_officielle)
+            )
             return
 
-        # ... (Conservez ici le reste de votre logique, assurez-vous que chaque 'if' est bien aligné à 8 espaces du bord gauche)
-        # Liste des commandes: !follow, !unstuck, !rate, !love, !8ball, !roll, !kiss, !slap, !joke, !wallet, !top, !list, !help
-        
-        # Exemple de fin de fonction correctement indentée :
+        if nettoye == "!follow":
+            self.following_user_id = user.id
+            await self.highrise.chat(f"🏃 Je te suis partout désormais @{user.username} ! (Tape 'stop' pour arrêter)")
+            return
+
+        if nettoye == "!unstuck":
+            self.following_user_id = None
+            try:
+                await self.highrise.walk_to(Position(x=4.0, y=0.0, z=4.0, facing="FrontLeft"))
+                await self.highrise.chat(f"✅ Réinitialisation de ma position réussie chef !")
+            except:
+                pass
+            return
+
+        # --- JEUX ET DIVERTISSEMENT ---
+        if nettoye.startswith("!rate"):
+            cible = message[5:].strip().replace("@", "")
+            if not cible:
+                cible = user.username
+            note = random.randint(1, 10)
+            await self.highrise.chat(f"📊 @{user.username} donne la note de {note}/10 à @{cible} ! 🔥")
+            return
+
+        if nettoye.startswith("!love"):
+            cible = message[5:].strip().replace("@", "")
+            if not cible:
+                await self.highrise.chat(f"❤️ @{user.username}, mentionne quelqu'un pour tester ton amour ! (Ex: !love @pseudo)")
+                return
+            index_amour = random.randint(0, 100)
+            await self.highrise.chat(f"❤️ Compatibilité amoureuse entre @{user.username} et @{cible} : {index_amour}% !")
+            return
+
+        if nettoye.startswith("!8ball"):
+            question = message[6:].strip()
+            if not question:
+                await self.highrise.chat(f"🔮 Pose-moi une vraie question @{user.username} ! (Ex: !8ball Est-ce que je suis beau ?)")
+                return
+            reponses = ["Oui, absolument !", "C'est une certitude.", "Peut-être bien...", "Je ne préfère pas répondre.", "Non, pas du tout.", "Impossible !"]
+            await self.highrise.chat(f"🔮 Boule de cristal de @{user.username} : {random.choice(reponses)}")
+            return
+
+        if nettoye == "!roll":
+            de = random.randint(1, 100)
+            await self.highrise.chat(f"🎲 @{user.username} lance un dé et obtient le score de : {de}/100 !")
+            return
+
+        if nettoye.startswith("!kiss"):
+            cible = message[5:].strip().replace("@", "")
+            if not cible:
+                await self.highrise.chat(f"❌ Indique à qui envoyer le bisou !")
+                return
+            await self.highrise.chat(f"💋 @{user.username} envoie un gros bisou plein de tendresse à @{cible} ! 🥰")
+            return
+
+        if nettoye.startswith("!slap"):
+            cible = message[5:].strip().replace("@", "")
+            if not cible:
+                await self.highrise.chat(f"❌ Indique qui tu veux gifler !")
+                return
+            await self.highrise.chat(f"🥊 CLAC ! @{user.username} donne une grosse gifle monumentale à @{cible} ! 😱")
+            return
+
+        if nettoye == "!joke":
+            blagues = [
+                "Pourquoi les plongeurs plongent-ils toujours en arrière ? Parce que sinon ils tombent dans le bateau !",
+                "Qu'est-ce qu'un écureuil avec des lunettes de soleil ? Un écureuil mystérieux !",
+                "Pourquoi les oiseaux volent-ils vers le sud en hiver ? Parce que c'est trop long d'y aller à pied !",
+                "Qu'est-ce qui est jaune et qui attend ? Jonathan !"
+            ]
+            await self.highrise.chat(f"🤣 Blague de @{user.username} : {random.choice(blagues)}")
+            return
+
+        if nettoye == "!wallet":
+            if user.id not in PLAYER_XP:
+                PLAYER_XP[user.id] = {"xp": 0, "level": 1, "username": user.username}
+            xp_actuel = PLAYER_XP[user.id]["xp"]
+            lvl_actuel = PLAYER_XP[user.id]["level"]
+            await self.highrise.chat(f"💳 [PORTEFEUILLE] @{user.username} -> Niveau : {lvl_actuel} | Expérience : {xp_actuel} XP ✨")
+            return
+
+        if nettoye == "!top":
+            if not PLAYER_XP:
+                await self.highrise.chat("🏆 Le classement est vide pour le moment. Parlez pour gagner de l'XP !")
+                return
+            tri = sorted(PLAYER_XP.items(), key=lambda x: x[1]["xp"], reverse=True)
+            podium = "🏆 [TOP 3 DES MEILLEURS DU SALON] :\n\n"
+            for index, (u_id, data) in enumerate(tri[:3]):
+                medailles = ["🥇", "🥈", "🥉"]
+                podium += f"{medailles[index]} #{index+1} : @{data['username']} (Niveau {data['level']} - {data['xp']} XP)\n"
+            await self.highrise.chat(podium)
+            return
+
+        # --- GESTION DES LISTES D'EMOTES ---
+        if nettoye in ["!list", "!liste"]:
+            await self.highrise.chat("📖 [Listes] : Tape !list1 (1-45) | !list2 (46-90) | !list3 (91-135) | !list4 (136-180)")
+            return
+
+        if nettoye == "!list1":
+            await self.highrise.chat("🕺 [LISTE 1] : 1: Swagbounce, 2: Duckwalk, 3: Pennywise, 13: Orangejustice, 25: Floss, 29: Griddy")
+            return
+
+        if nettoye == "!list2":
+            await self.highrise.chat("🕺 [LISTE 2] : 46: Frog, 49: Boxer, 52: Dab, 65: Anime, 74: Gangnam, 87: Rofl")
+            return
+
+        if nettoye == "!list3":
+            await self.highrise.chat("🕺 [LISTE 3] : 93: Punch, 96: Nightfever, 99: Roll, 104: Uwu, 118: Heartshape, 126: Crying")
+            return
+
+        if nettoye == "!list4":
+            await self.highrise.chat("🕺 [LISTE 4] : 137: Wings, 140: Sleep, 144: Hero2, 157: Hadoken, 177: Twerk, 179: Afk")
+            return
+
+        # --- MENU D'AIDE PRINCIPAL ---
         if nettoye == "!help":
-            await self.highrise.chat("✨▬▬▬▬▬ <#FFD700>ＬＥＶＩＡＥ ＰＲＯ</#FFD700> ▬▬▬▬▬✨")
-            # ... (autres messages)
+            await self.highrise.chat("✨▬▬▬▬▬ <#FFD700>ＬＥＶＩＡＥ  ＰＲＯ</#FFD700> ▬▬▬▬▬✨")
+            await self.highrise.chat("🕺 <#00FFFF>✦ EMOTES :</#00FFFF> Écris le chiffre <#ADFF2F>(1-180)</#ADFF2F> ou le nom ! Tape <#FF69B4>!list</#FF69B4>")
+            await self.highrise.chat("🎮 <#00FFFF>✦ JEUX :</#00FFFF> !rate | !love | !8ball | !roll | !kiss | !slap | !joke")
+            await self.highrise.chat("⚙️ <#00FFFF>✦ STATS :</#00FFFF> !wallet | !top | !id | !ping")
+            await self.highrise.chat("🏃 <#00FFFF>✦ MOVES :</#00FFFF> !follow | !unstuck | stop")
+            if user.id in OWNERS or user.id in MODERATORS_BOT:
+                await self.highrise.chat("🛡️ <#FF4500>✦ STAFF :</#FF4500> !lock | !unlock | !come | !shout | !kick | !mute")
+            await self.highrise.chat("✨▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬✨")
             return
 
-        # MESSAGE D'ERREUR (Dernière condition avant la fin de la fonction)
+        # --- MESSAGE D'ERREUR AUTOMATIQUE ---
         if message.startswith("!") or (message.isdigit() and nettoye not in EMOTES):
-            await self.highrise.chat(f"❌ Désolé @{user.username}, commande inconnue ! Tape !help")
+            await self.highrise.chat(f"❌ Désolé chef @{user.username}, j'ai pas ça dans ma liste ! Tape !help")
             return
 
-# --- FIN DU FICHIER ---
+# === BLOC DE DÉMARRAGE D'ORIGINE ===
 if __name__ == "__main__":
     from highrise.__main__ import main
     main()
